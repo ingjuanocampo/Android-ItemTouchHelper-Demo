@@ -17,7 +17,6 @@
 package co.paulburke.android.itemtouchhelperdemo;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -35,6 +34,7 @@ import java.util.List;
 import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperAdapter;
 import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperViewHolder;
 import co.paulburke.android.itemtouchhelperdemo.helper.OnStartDragListener;
+import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
 
 /**
  * Simple RecyclerView.Adapter that implements {@link ItemTouchHelperAdapter} to respond to move and
@@ -42,12 +42,14 @@ import co.paulburke.android.itemtouchhelperdemo.helper.OnStartDragListener;
  *
  * @author Paul Burke (ipaulpro)
  */
-public class RecyclerListAdapter extends RecyclerView.Adapter<RecyclerListAdapter.ItemViewHolder>
-        implements ItemTouchHelperAdapter {
+public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTouchHelperAdapter {
+
+    private static final int PAR = 1;
 
     private final List<String> mItems = new ArrayList<>();
 
     private final OnStartDragListener mDragStartListener;
+    private int IMPAR = 2;
 
     public RecyclerListAdapter(Context context, OnStartDragListener dragStartListener) {
         mDragStartListener = dragStartListener;
@@ -55,32 +57,37 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<RecyclerListAdapte
     }
 
     @Override
-    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_main, parent, false);
-        ItemViewHolder itemViewHolder = new ItemViewHolder(view);
+        RecyclerView.ViewHolder itemViewHolder = viewType == IMPAR ? new SwipeableItemViewHolder(parent) : new ItemViewHolder(view);
         return itemViewHolder;
     }
 
     @Override
-    public void onBindViewHolder(final ItemViewHolder holder, int position) {
-        holder.textView.setText(mItems.get(position));
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
+        int viewType = getItemViewType(position);
 
-        // Start a drag whenever the handle view it touched
-        holder.handleView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
-                    mDragStartListener.onStartDrag(holder);
-                }
-                return false;
-            }
-        });
+        if (viewType == PAR) {
+            ItemViewHolder itemViewHolder = (ItemViewHolder) holder;
+            itemViewHolder.textView.setText(mItems.get(position));
+
+        } else if (viewType == IMPAR) {
+            SwipeableItemViewHolder swipeableViewHolder = (SwipeableItemViewHolder) holder;
+            swipeableViewHolder.textView.setText(mItems.get(position));
+        }
+
+
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position%2==0 ? PAR : IMPAR ;
     }
 
     @Override
     public void onItemDismiss(int position) {
-        mItems.remove(position);
-        notifyItemRemoved(position);
+        //mItems.remove(position);
+        //notifyItemRemoved(position);
     }
 
     @Override
@@ -99,8 +106,24 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<RecyclerListAdapte
      * Simple example of a view holder that implements {@link ItemTouchHelperViewHolder} and has a
      * "handle" view that initiates a drag event when touched.
      */
-    public static class ItemViewHolder extends RecyclerView.ViewHolder implements
-            ItemTouchHelperViewHolder {
+    public static class SwipeableItemViewHolder extends SwipeableViewHolder {
+
+        public final TextView textView;
+        public final ImageView handleView;
+
+        public SwipeableItemViewHolder(ViewGroup viewGroup) {
+            super(viewGroup);
+            textView = (TextView) itemView.findViewById(R.id.text);
+            handleView = (ImageView) itemView.findViewById(R.id.handle);
+        }
+
+        @Override
+        protected int getViewHolderType() {
+            return R.layout.item_main;
+        }
+    }
+
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public final TextView textView;
         public final ImageView handleView;
@@ -110,15 +133,9 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<RecyclerListAdapte
             textView = (TextView) itemView.findViewById(R.id.text);
             handleView = (ImageView) itemView.findViewById(R.id.handle);
         }
-
-        @Override
-        public void onItemSelected() {
-            itemView.setBackgroundColor(Color.LTGRAY);
-        }
-
-        @Override
-        public void onItemClear() {
-            itemView.setBackgroundColor(0);
-        }
     }
+
+
+
+
 }

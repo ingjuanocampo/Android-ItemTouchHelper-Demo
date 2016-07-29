@@ -20,6 +20,10 @@ import android.graphics.Canvas;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
+
+import co.paulburke.android.itemtouchhelperdemo.RecyclerListAdapter;
+import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
 
 /**
  * An implementation of {@link ItemTouchHelper.Callback} that enables basic drag & drop and
@@ -84,14 +88,29 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     @Override
     public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && viewHolder instanceof SwipeableViewHolder) {
             // Fade out the view as it is swiped out of the parent's bounds
-            final float alpha = ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-            viewHolder.itemView.setAlpha(alpha);
-            viewHolder.itemView.setTranslationX(dX);
-        } else {
-            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            //final float alpha = ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
+            //viewHolder.itemView.setAlpha(alpha);
+
+            SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
+
+
+            /*swipeableViewHolder.swipeableViewLayout.getLayoutParams().width = swipeableViewHolder.swipeableViewLayout.getLayoutParams().width
+                    + Math.round(-getSwipeXTranslation(dX));
+            swipeableViewHolder.swipeableViewLayout.requestLayout();*/
+
+            swipeableViewHolder.swipeableMainContainer.setTranslationX(getSwipeXTranslation(dX));
+            swipeableViewHolder.swipeableViewLayout.setBackgroundColor(swipeableViewHolder.itemView.getContext().getResources().getColor(android.R
+                    .color.white));
+
+            //viewHolder.itemView.setTranslationX(getSwipeXTranslation(dX));
+            Log.e("dx, dy", " "+ dX + " " + dY);
         }
+    }
+
+    private float getSwipeXTranslation(float dX) {
+        return dX < 0 ? dX/5 : 0;
     }
 
     @Override
@@ -100,8 +119,8 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
         if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
             if (viewHolder instanceof ItemTouchHelperViewHolder) {
                 // Let the view holder know that this item is being moved or dragged
-                ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
-                itemViewHolder.onItemSelected();
+               // ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+                //itemViewHolder.onItemSelected();
             }
         }
 
@@ -112,7 +131,7 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
         super.clearView(recyclerView, viewHolder);
 
-        viewHolder.itemView.setAlpha(ALPHA_FULL);
+        //viewHolder.itemView.setAlpha(ALPHA_FULL);
 
         if (viewHolder instanceof ItemTouchHelperViewHolder) {
             // Tell the view holder it's time to restore the idle state
