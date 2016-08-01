@@ -28,17 +28,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import co.paulburke.android.itemtouchhelperdemo.helper.OnStartDragListener;
+import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperAdapter;
 import co.paulburke.android.itemtouchhelperdemo.helper.SimpleItemTouchHelperCallback;
 
 
 /**
  * @author Paul Burke (ipaulpro)
  */
-public class RecyclerListFragment extends Fragment implements OnStartDragListener, RecyclerListAdapter.SwipeAdapterActions {
+public class RecyclerListFragment extends Fragment implements RecyclerListAdapter.SwipeAdapterActions {
 
-    private ItemTouchHelper mItemTouchHelper;
-    private SimpleItemTouchHelperCallback callback;
+    ItemTouchHelperAdapter adapter;
 
     public RecyclerListFragment() {
     }
@@ -53,35 +52,17 @@ public class RecyclerListFragment extends Fragment implements OnStartDragListene
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        RecyclerListAdapter adapter = new RecyclerListAdapter(getActivity(), this, this);
 
         RecyclerView recyclerView = (RecyclerView) view;
+        adapter = new RecyclerListAdapter(getActivity(), this, recyclerView);
+
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        callback = new SimpleItemTouchHelperCallback(adapter, recyclerView);
-        mItemTouchHelper = new ItemTouchHelper(callback);
-        mItemTouchHelper.attachToRecyclerView(recyclerView);
-    }
-
-    @Override
-    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
-        mItemTouchHelper.startDrag(viewHolder);
     }
 
     @Override
     public void swiped(int position) {
-
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                Log.e("back", "count: "+ getFragmentManager().getBackStackEntryCount());
-                if (getFragmentManager().getBackStackEntryCount() == 1) {
-                    callback.restoreSwipedItem();
-
-                }
-            }
-        });
 
         getFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.fp_slide_in_right, R.anim.fp_slide_out_left, R.anim.fp_slide_in_left, R.anim.fp_slide_out_right)

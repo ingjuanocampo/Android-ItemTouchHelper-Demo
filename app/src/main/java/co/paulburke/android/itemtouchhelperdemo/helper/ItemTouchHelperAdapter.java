@@ -18,15 +18,63 @@ package co.paulburke.android.itemtouchhelperdemo.helper;
 
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.view.ViewGroup;
 
-import co.paulburke.android.itemtouchhelperdemo.RecyclerListAdapter;
+import java.util.ArrayList;
+import java.util.List;
+
+import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
 
 /**
  * Interface to listen for a move or dismissal event from a {@link ItemTouchHelper.Callback}.
  *
  * @author Paul Burke (ipaulpro)
  */
-public interface ItemTouchHelperAdapter {
+public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
+
+    public interface SwipeAdapterActions {
+        void swiped(int position);
+    }
+
+
+    private final SimpleItemTouchHelperCallback callback;
+    private SwipeAdapterActions listener;
+    private List<RecyclerView.ViewHolder> swipeableViewHolders;
+
+
+    public ItemTouchHelperAdapter(SwipeAdapterActions listener, RecyclerView recyclerView) {
+        callback = new SimpleItemTouchHelperCallback(this);
+        ItemTouchHelper mItemTouchHelper = new ItemTouchHelper(callback);
+        mItemTouchHelper.attachToRecyclerView(recyclerView);
+        this.listener = listener;
+        this.swipeableViewHolders = new ArrayList<>();
+    }
+
+    @Override
+    public final RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        RecyclerView.ViewHolder itemViewHolder = onCreateSwipeViewHolder(parent, viewType);
+        swipeableViewHolders.add(itemViewHolder);
+        return itemViewHolder;
+    }
+
+    @Override
+    public final void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
+        onBindSwipeViewHolder(holder, position);
+        if (position == callback.getLastSelectedPosition()) {
+            restoreSwipedItem();
+        }
+    }
+
+    protected abstract void onBindSwipeViewHolder(RecyclerView.ViewHolder holder, int position);
+
+
+    /**
+     *
+     * @param parent
+     * @param viewType
+     * @return
+     */
+    protected abstract RecyclerView.ViewHolder onCreateSwipeViewHolder(ViewGroup parent, int viewType);
 
     /**
      * Called when an item has been dismissed by a swipe.<br/>
@@ -39,6 +87,22 @@ public interface ItemTouchHelperAdapter {
      * @see RecyclerView#getAdapterPositionFor(RecyclerView.ViewHolder)
      * @see RecyclerView.ViewHolder#getAdapterPosition()
      */
-    void onItemDismiss(int position);
+    protected void onItemDismiss(int position) {
+        listener.swiped(position);
+    }
 
+
+    private void restoreSwipedItem() {
+        RecyclerView.ViewHolder viewHolder = swipeableViewHolders.get(callback.getLastSelectedPosition());
+
+        if (viewHolder != null && viewHolder instanceof SwipeableViewHolder) {
+            SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
+            int startPos = -swipeableViewHolder.swipeableMainContainer.getWidth();
+            swipeableViewHolder.swipeableMainContainer.setTranslationX(startPos);
+            for (int dx = startPos; dx <= 0 ; dx++ ) {
+                swipeableViewHolder.swipeableMainContainer.setTranslationX(dx);
+            }
+        }
+
+    }
 }

@@ -26,7 +26,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import co.paulburke.android.itemtouchhelperdemo.helper.OnStartDragListener;
 import co.paulburke.android.itemtouchhelperdemo.helper.SimpleItemTouchHelperCallback;
 
 
@@ -34,7 +33,7 @@ import co.paulburke.android.itemtouchhelperdemo.helper.SimpleItemTouchHelperCall
 /**
  * @author Paul Burke (ipaulpro)
  */
-public class RecyclerGridFragment extends Fragment implements OnStartDragListener, RecyclerListAdapter.SwipeAdapterActions {
+public class RecyclerGridFragment extends Fragment implements RecyclerListAdapter.SwipeAdapterActions {
 
     private ItemTouchHelper mItemTouchHelper;
 
@@ -51,24 +50,20 @@ public class RecyclerGridFragment extends Fragment implements OnStartDragListene
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final RecyclerListAdapter adapter = new RecyclerListAdapter(getActivity(), this, this);
 
         RecyclerView recyclerView = (RecyclerView) view;
         recyclerView.setHasFixedSize(true);
+        final RecyclerListAdapter adapter = new RecyclerListAdapter(getActivity(), this, recyclerView);
+
         recyclerView.setAdapter(adapter);
 
         final int spanCount = getResources().getInteger(R.integer.grid_columns);
         final GridLayoutManager layoutManager = new GridLayoutManager(getActivity(), spanCount);
         recyclerView.setLayoutManager(layoutManager);
 
-        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(adapter, recyclerView);
+        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(adapter);
         mItemTouchHelper = new ItemTouchHelper(callback);
         mItemTouchHelper.attachToRecyclerView(recyclerView);
-    }
-
-    @Override
-    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
-        mItemTouchHelper.startDrag(viewHolder);
     }
 
     @Override

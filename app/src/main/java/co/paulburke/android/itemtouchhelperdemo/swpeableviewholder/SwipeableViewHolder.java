@@ -3,6 +3,7 @@ package co.paulburke.android.itemtouchhelperdemo.swpeableviewholder;
 import android.graphics.Color;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,8 +36,13 @@ public abstract class SwipeableViewHolder extends RecyclerView.ViewHolder implem
     protected abstract @LayoutRes int getViewHolderType();
 
     @Override
-    public void onItemSelected() {
-       // wasAlreadySelected = true;
+    public void onRestoreItem() {
+
+        int startPos = -swipeableMainContainer.getWidth();
+        swipeableMainContainer.setTranslationX(startPos);
+        for (int dx = startPos; dx <= 0 ; dx++ ) {
+            swipeableMainContainer.setTranslationX(dx);
+        }
     }
 
     @Override

@@ -17,8 +17,8 @@
 package co.paulburke.android.itemtouchhelperdemo;
 
 import android.content.Context;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,9 +31,8 @@ import java.util.List;
 
 import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperAdapter;
 import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperViewHolder;
-import co.paulburke.android.itemtouchhelperdemo.helper.OnStartDragListener;
+import co.paulburke.android.itemtouchhelperdemo.helper.SimpleItemTouchHelperCallback;
 import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
-import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewModel;
 
 /**
  * Simple RecyclerView.Adapter that implements {@link ItemTouchHelperAdapter} to respond to move and
@@ -41,36 +40,26 @@ import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableView
  *
  * @author Paul Burke (ipaulpro)
  */
-public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTouchHelperAdapter {
+public class RecyclerListAdapter extends ItemTouchHelperAdapter {
 
-    public interface SwipeAdapterActions {
-        void swiped(int position);
-    }
+
 
     private static final int PAR = 1;
 
-    private SwipeAdapterActions listener;
 
     private final List<String> mItems = new ArrayList<>();
 
-    private final OnStartDragListener mDragStartListener;
     private int IMPAR = 2;
 
-    public RecyclerListAdapter(Context context, OnStartDragListener dragStartListener, SwipeAdapterActions listener) {
-        mDragStartListener = dragStartListener;
+    public RecyclerListAdapter(Context context, SwipeAdapterActions listener, RecyclerView recyclerView) {
+        super(listener, recyclerView);
+
+
         mItems.addAll(Arrays.asList(context.getResources().getStringArray(R.array.dummy_items)));
-        this.listener = listener;
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_main, parent, false);
-        RecyclerView.ViewHolder itemViewHolder = viewType == IMPAR ? new SwipeableItemViewHolder(parent) : new ItemViewHolder(view);
-        return itemViewHolder;
-    }
-
-    @Override
-    public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
+    public void onBindSwipeViewHolder(final RecyclerView.ViewHolder holder, int position) {
         int viewType = getItemViewType(position);
 
         if (viewType == PAR) {
@@ -81,6 +70,11 @@ public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTou
             SwipeableItemViewHolder swipeableViewHolder = (SwipeableItemViewHolder) holder;
             swipeableViewHolder.textView.setText(mItems.get(position));
         }
+
+        if (holder instanceof SwipeableViewHolder ) {
+            ((SwipeableViewHolder) holder).onRestoreItem();
+        }
+
     }
 
     @Override
@@ -88,22 +82,18 @@ public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTou
         return position%2==0 ? PAR : IMPAR ;
     }
 
-    @Override
-    public void onItemDismiss(int position) {
-        //mItems.remove(position);
-        //notifyItemRemoved(position);
-        listener.swiped(position);
 
-    }
-
-    /*@Override
-    public List<SwipeableViewModel> getSwipeableItems() {
-        return ;
-    }*/
 
     @Override
     public int getItemCount() {
         return mItems.size();
+    }
+
+    @Override
+    protected RecyclerView.ViewHolder onCreateSwipeViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_main, parent, false);
+        RecyclerView.ViewHolder itemViewHolder = viewType == IMPAR ? new SwipeableItemViewHolder(parent) : new ItemViewHolder(view);
+        return itemViewHolder;
     }
 
     /**

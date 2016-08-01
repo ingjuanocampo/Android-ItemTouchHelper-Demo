@@ -43,16 +43,16 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     private final ItemTouchHelperAdapter mAdapter;
     private float currentDxTranslation;
     private Canvas canvas;
-    private final RecyclerView recycler;
+    private RecyclerView recycler;
     private boolean isSwiped;
     private Map<RecyclerView.ViewHolder, Integer> viewHolderDxMap;
-    private static RecyclerView.ViewHolder lastSelectedViewHolder;
+    private RecyclerView.ViewHolder lastSelectedViewHolder;
+    private static int lastSelectedPosition;
 
 
-    public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter, RecyclerView recyclerView) {
+    public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter) {
         mAdapter = adapter;
         this.viewHolderDxMap = new HashMap<>();
-        this.recycler = recyclerView;
     }
 
     @Override
@@ -97,7 +97,8 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
         if (!isSwiped) {
             isSwiped = true;
-            mAdapter.onItemDismiss(lastSelectedViewHolder.getAdapterPosition());
+            lastSelectedPosition = lastSelectedViewHolder.getAdapterPosition();
+            mAdapter.onItemDismiss(lastSelectedPosition);
         }
 
     }
@@ -106,7 +107,6 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && viewHolder instanceof SwipeableViewHolder) {
-
             if (isDxProportionalToTheLastState(viewHolder, (int) dX)) {
                 SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
                 currentDxTranslation = getSwipeXTranslation(dX);
@@ -117,9 +117,8 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
                 viewHolderDxMap.put(viewHolder, (int) dX);
             }
             Log.e("dx, dy", " "+ dX + " " + dY);
-
             this.canvas = c;
-
+            this.recycler = recyclerView;
         }
     }
 
@@ -138,8 +137,9 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
             if (lastSelectedViewHolder instanceof SwipeableViewHolder && !isSwiped) {
                 // Let the view holder know that this item is being moved or dragged
                 isSwiped = true;
-                mAdapter.onItemDismiss(lastSelectedViewHolder.getAdapterPosition());
-                ((SwipeableViewHolder) lastSelectedViewHolder).onItemSelected();
+                lastSelectedPosition = lastSelectedViewHolder.getAdapterPosition();
+                mAdapter.onItemDismiss(lastSelectedPosition);
+                ((SwipeableViewHolder) lastSelectedViewHolder).onRestoreItem();
             }
         }
         this.lastSelectedViewHolder = viewHolder;
@@ -148,19 +148,8 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
         super.onSelectedChanged(viewHolder, actionState);
     }
 
-    public void restoreSwipedItem() {
-        if (lastSelectedViewHolder instanceof SwipeableViewHolder) {
-            SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) lastSelectedViewHolder;
-            int startPos = -swipeableViewHolder.swipeableMainContainer.getWidth();
-            swipeableViewHolder.swipeableMainContainer.setTranslationX(startPos);
-            swipeViewHolderTo(startPos, 0, lastSelectedViewHolder);
-        }
-    }
-
-    public void swipeViewHolderTo(int starPos, int finalPos, RecyclerView.ViewHolder viewHolder) {
-        for (int dx = starPos; dx <= finalPos ; dx++ ) {
-            onChildDraw(canvas, recycler, viewHolder, dx, 0, ItemTouchHelper.ACTION_STATE_SWIPE, false);
-        }
+    public int getLastSelectedPosition() {
+        return lastSelectedPosition;
     }
 
     @Override
