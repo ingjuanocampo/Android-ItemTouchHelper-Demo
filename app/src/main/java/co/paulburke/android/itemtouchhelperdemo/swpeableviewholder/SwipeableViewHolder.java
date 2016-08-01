@@ -36,7 +36,7 @@ public abstract class SwipeableViewHolder extends RecyclerView.ViewHolder implem
 
     @Override
     public void onItemSelected() {
-        itemView.setBackgroundColor(Color.LTGRAY);
+       // wasAlreadySelected = true;
     }
 
     @Override

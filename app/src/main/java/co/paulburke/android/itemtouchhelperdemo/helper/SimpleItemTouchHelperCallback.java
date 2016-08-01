@@ -22,7 +22,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 
-import co.paulburke.android.itemtouchhelperdemo.RecyclerListAdapter;
+import java.util.HashMap;
+import java.util.Map;
+
 import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
 
 /**
@@ -37,12 +39,20 @@ import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableView
  */
 public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
-    public static final float ALPHA_FULL = 1.0f;
 
     private final ItemTouchHelperAdapter mAdapter;
+    private float currentDxTranslation;
+    private Canvas canvas;
+    private final RecyclerView recycler;
+    private boolean isSwiped;
+    private Map<RecyclerView.ViewHolder, Integer> viewHolderDxMap;
+    private static RecyclerView.ViewHolder lastSelectedViewHolder;
 
-    public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter) {
+
+    public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter, RecyclerView recyclerView) {
         mAdapter = adapter;
+        this.viewHolderDxMap = new HashMap<>();
+        this.recycler = recyclerView;
     }
 
     @Override
@@ -71,42 +81,50 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     @Override
     public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
-        if (source.getItemViewType() != target.getItemViewType()) {
-            return false;
-        }
-
-        // Notify the adapter of the move
-        mAdapter.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
         return true;
     }
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
         // Notify the adapter of the dismissal
-        mAdapter.onItemDismiss(viewHolder.getAdapterPosition());
+
+
+        /*for (int dx = viewHolderDxMap.get(viewHolder); dx <= 0 ; dx = dx + ) {
+            onChildDraw(canvas, recycler, viewHolder, dx, 0, ItemTouchHelper.ACTION_STATE_SWIPE, false);
+        }*/
+
+        //clearView(recycler, viewHolder);
+
+        if (!isSwiped) {
+            isSwiped = true;
+            mAdapter.onItemDismiss(lastSelectedViewHolder.getAdapterPosition());
+        }
+
     }
 
     @Override
     public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && viewHolder instanceof SwipeableViewHolder) {
-            // Fade out the view as it is swiped out of the parent's bounds
-            //final float alpha = ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-            //viewHolder.itemView.setAlpha(alpha);
 
-            SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
-
-
-            /*swipeableViewHolder.swipeableViewLayout.getLayoutParams().width = swipeableViewHolder.swipeableViewLayout.getLayoutParams().width
-                    + Math.round(-getSwipeXTranslation(dX));
-            swipeableViewHolder.swipeableViewLayout.requestLayout();*/
-
-            swipeableViewHolder.swipeableMainContainer.setTranslationX(getSwipeXTranslation(dX));
-            swipeableViewHolder.swipeableViewLayout.setBackgroundColor(swipeableViewHolder.itemView.getContext().getResources().getColor(android.R
-                    .color.white));
-
-            //viewHolder.itemView.setTranslationX(getSwipeXTranslation(dX));
+            if (isDxProportionalToTheLastState(viewHolder, (int) dX)) {
+                SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
+                currentDxTranslation = getSwipeXTranslation(dX);
+                swipeableViewHolder.swipeableMainContainer.setTranslationX(currentDxTranslation);
+                swipeableViewHolder.swipeableViewLayout.setBackgroundColor(swipeableViewHolder.itemView.getContext().getResources().getColor(android.R
+                        .color.white));
+                //viewHolder.itemView.setTranslationX(getSwipeXTranslation(dX));
+                viewHolderDxMap.put(viewHolder, (int) dX);
+            }
             Log.e("dx, dy", " "+ dX + " " + dY);
+
+            this.canvas = c;
+
         }
+    }
+
+    private boolean isDxProportionalToTheLastState(RecyclerView.ViewHolder lastViewHolder, int newDx) {
+        return viewHolderDxMap.containsKey(lastViewHolder) ?  Math.abs(viewHolderDxMap.get(lastViewHolder) - newDx) < 350 : true;
     }
 
     private float getSwipeXTranslation(float dX) {
@@ -116,15 +134,33 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     @Override
     public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
         // We only want the active item to change
-        if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
-            if (viewHolder instanceof ItemTouchHelperViewHolder) {
+        if (actionState == ItemTouchHelper.ACTION_STATE_IDLE) {
+            if (lastSelectedViewHolder instanceof SwipeableViewHolder && !isSwiped) {
                 // Let the view holder know that this item is being moved or dragged
-               // ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
-                //itemViewHolder.onItemSelected();
+                isSwiped = true;
+                mAdapter.onItemDismiss(lastSelectedViewHolder.getAdapterPosition());
+                ((SwipeableViewHolder) lastSelectedViewHolder).onItemSelected();
             }
         }
+        this.lastSelectedViewHolder = viewHolder;
+        Log.w("onSelected", "actionState " + actionState);
 
         super.onSelectedChanged(viewHolder, actionState);
+    }
+
+    public void restoreSwipedItem() {
+        if (lastSelectedViewHolder instanceof SwipeableViewHolder) {
+            SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) lastSelectedViewHolder;
+            int startPos = -swipeableViewHolder.swipeableMainContainer.getWidth();
+            swipeableViewHolder.swipeableMainContainer.setTranslationX(startPos);
+            swipeViewHolderTo(startPos, 0, lastSelectedViewHolder);
+        }
+    }
+
+    public void swipeViewHolderTo(int starPos, int finalPos, RecyclerView.ViewHolder viewHolder) {
+        for (int dx = starPos; dx <= finalPos ; dx++ ) {
+            onChildDraw(canvas, recycler, viewHolder, dx, 0, ItemTouchHelper.ACTION_STATE_SWIPE, false);
+        }
     }
 
     @Override

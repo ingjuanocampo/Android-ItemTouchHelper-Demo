@@ -56,6 +56,7 @@ public class MainActivity extends ActionBarActivity implements MainFragment.OnLi
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content, fragment)
+                .setCustomAnimations(R.anim.fp_slide_in_right, R.anim.fp_slide_out_left, R.anim.fp_slide_in_left, R.anim.fp_slide_out_right)
                 .addToBackStack(null)
                 .commit();
     }

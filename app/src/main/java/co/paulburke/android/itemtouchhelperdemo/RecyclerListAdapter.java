@@ -20,7 +20,6 @@ import android.content.Context;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -28,13 +27,13 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperAdapter;
 import co.paulburke.android.itemtouchhelperdemo.helper.ItemTouchHelperViewHolder;
 import co.paulburke.android.itemtouchhelperdemo.helper.OnStartDragListener;
 import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
+import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewModel;
 
 /**
  * Simple RecyclerView.Adapter that implements {@link ItemTouchHelperAdapter} to respond to move and
@@ -44,16 +43,23 @@ import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableView
  */
 public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTouchHelperAdapter {
 
+    public interface SwipeAdapterActions {
+        void swiped(int position);
+    }
+
     private static final int PAR = 1;
+
+    private SwipeAdapterActions listener;
 
     private final List<String> mItems = new ArrayList<>();
 
     private final OnStartDragListener mDragStartListener;
     private int IMPAR = 2;
 
-    public RecyclerListAdapter(Context context, OnStartDragListener dragStartListener) {
+    public RecyclerListAdapter(Context context, OnStartDragListener dragStartListener, SwipeAdapterActions listener) {
         mDragStartListener = dragStartListener;
         mItems.addAll(Arrays.asList(context.getResources().getStringArray(R.array.dummy_items)));
+        this.listener = listener;
     }
 
     @Override
@@ -75,8 +81,6 @@ public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTou
             SwipeableItemViewHolder swipeableViewHolder = (SwipeableItemViewHolder) holder;
             swipeableViewHolder.textView.setText(mItems.get(position));
         }
-
-
     }
 
     @Override
@@ -88,14 +92,14 @@ public class RecyclerListAdapter extends RecyclerView.Adapter implements ItemTou
     public void onItemDismiss(int position) {
         //mItems.remove(position);
         //notifyItemRemoved(position);
+        listener.swiped(position);
+
     }
 
-    @Override
-    public boolean onItemMove(int fromPosition, int toPosition) {
-        Collections.swap(mItems, fromPosition, toPosition);
-        notifyItemMoved(fromPosition, toPosition);
-        return true;
-    }
+    /*@Override
+    public List<SwipeableViewModel> getSwipeableItems() {
+        return ;
+    }*/
 
     @Override
     public int getItemCount() {
