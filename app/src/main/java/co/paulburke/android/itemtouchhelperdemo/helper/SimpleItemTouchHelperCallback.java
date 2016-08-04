@@ -40,6 +40,7 @@ import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableView
 public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
 
+    private static final int NO_POSITION_CACHED = -1;
     private final ItemTouchHelperAdapter mAdapter;
     private float currentDxTranslation;
     private Canvas canvas;
@@ -47,7 +48,8 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     private boolean isSwiped;
     private Map<RecyclerView.ViewHolder, Integer> viewHolderDxMap;
     private RecyclerView.ViewHolder lastSelectedViewHolder;
-    private static int lastSelectedPosition;
+
+    private static int lastSelectedPosition = NO_POSITION_CACHED;
 
 
     public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter) {
@@ -88,8 +90,7 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
         // Notify the adapter of the dismissal
 
-
-        /*for (int dx = viewHolderDxMap.get(viewHolder); dx <= 0 ; dx = dx + ) {
+        /*for (int dx = viewHolderDxMap.get(viewHolder); dx <= 0 ; dx = dx ++ ) {
             onChildDraw(canvas, recycler, viewHolder, dx, 0, ItemTouchHelper.ACTION_STATE_SWIPE, false);
         }*/
 
@@ -150,6 +151,10 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     public int getLastSelectedPosition() {
         return lastSelectedPosition;
+    }
+
+    public void clearCached() {
+        lastSelectedPosition = NO_POSITION_CACHED;
     }
 
     @Override

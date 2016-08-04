@@ -19,6 +19,8 @@ package co.paulburke.android.itemtouchhelperdemo.helper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,8 @@ import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableView
  * @author Paul Burke (ipaulpro)
  */
 public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
+
+    private final RecyclerView recycler;
 
     public interface SwipeAdapterActions {
         void swiped(int position);
@@ -48,6 +52,7 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
         mItemTouchHelper.attachToRecyclerView(recyclerView);
         this.listener = listener;
         this.swipeableViewHolders = new ArrayList<>();
+        this.recycler = recyclerView;
     }
 
     @Override
@@ -66,7 +71,6 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
     }
 
     protected abstract void onBindSwipeViewHolder(RecyclerView.ViewHolder holder, int position);
-
 
     /**
      *
@@ -93,15 +97,14 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
 
 
     private void restoreSwipedItem() {
-        RecyclerView.ViewHolder viewHolder = swipeableViewHolders.get(callback.getLastSelectedPosition());
+        final RecyclerView.ViewHolder viewHolder = swipeableViewHolders.get(callback.getLastSelectedPosition());
 
         if (viewHolder != null && viewHolder instanceof SwipeableViewHolder) {
             SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
-            int startPos = -swipeableViewHolder.swipeableMainContainer.getWidth();
-            swipeableViewHolder.swipeableMainContainer.setTranslationX(startPos);
-            for (int dx = startPos; dx <= 0 ; dx++ ) {
-                swipeableViewHolder.swipeableMainContainer.setTranslationX(dx);
-            }
+
+            Animation animation = AnimationUtils.loadAnimation(viewHolder.itemView.getContext(), android.R.anim.slide_in_left);
+            swipeableViewHolder.swipeableMainContainer.startAnimation(animation);
+            callback.clearCached();
         }
 
     }
