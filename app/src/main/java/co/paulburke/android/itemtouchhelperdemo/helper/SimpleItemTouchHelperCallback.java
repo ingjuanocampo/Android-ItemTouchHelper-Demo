@@ -96,7 +96,7 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
         //clearView(recycler, viewHolder);
 
-        if (!isSwiped) {
+        if (!isSwiped && viewHolder instanceof SwipeableViewHolder) {
             isSwiped = true;
             lastSelectedPosition = lastSelectedViewHolder.getAdapterPosition();
             mAdapter.onItemDismiss(lastSelectedPosition);
@@ -116,10 +116,19 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
                         .color.white));
                 //viewHolder.itemView.setTranslationX(getSwipeXTranslation(dX));
                 viewHolderDxMap.put(viewHolder, (int) dX);
+                makeParallaxAnimation(dX, viewHolder);
             }
             Log.e("dx, dy", " "+ dX + " " + dY);
             this.canvas = c;
             this.recycler = recyclerView;
+        }
+    }
+
+    private void makeParallaxAnimation(float dX, RecyclerView.ViewHolder viewHolderDragging) {
+        for (RecyclerView.ViewHolder viewHolderAnimate : mAdapter.getSwipeableViewHolders()) {
+            if (viewHolderAnimate != null && viewHolderAnimate != viewHolderDragging) {
+                viewHolderAnimate.itemView.setTranslationX(dX/10);
+            }
         }
     }
 

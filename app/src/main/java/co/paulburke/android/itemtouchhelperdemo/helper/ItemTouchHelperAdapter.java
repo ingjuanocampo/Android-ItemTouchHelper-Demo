@@ -25,6 +25,7 @@ import android.view.animation.AnimationUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import co.paulburke.android.itemtouchhelperdemo.R;
 import co.paulburke.android.itemtouchhelperdemo.swpeableviewholder.SwipeableViewHolder;
 
 /**
@@ -39,7 +40,6 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
     public interface SwipeAdapterActions {
         void swiped(int position);
     }
-
 
     private final SimpleItemTouchHelperCallback callback;
     private SwipeAdapterActions listener;
@@ -80,6 +80,10 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
      */
     protected abstract RecyclerView.ViewHolder onCreateSwipeViewHolder(ViewGroup parent, int viewType);
 
+    public List<RecyclerView.ViewHolder> getSwipeableViewHolders() {
+        return swipeableViewHolders;
+    }
+
     /**
      * Called when an item has been dismissed by a swipe.<br/>
      * <br/>
@@ -91,10 +95,9 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
      * @see RecyclerView#getAdapterPositionFor(RecyclerView.ViewHolder)
      * @see RecyclerView.ViewHolder#getAdapterPosition()
      */
-    protected void onItemDismiss(int position) {
+    public void onItemDismiss(int position) {
         listener.swiped(position);
     }
-
 
     private void restoreSwipedItem() {
         final RecyclerView.ViewHolder viewHolder = swipeableViewHolders.get(callback.getLastSelectedPosition());
@@ -102,10 +105,9 @@ public abstract class ItemTouchHelperAdapter extends RecyclerView.Adapter {
         if (viewHolder != null && viewHolder instanceof SwipeableViewHolder) {
             SwipeableViewHolder swipeableViewHolder = (SwipeableViewHolder) viewHolder;
 
-            Animation animation = AnimationUtils.loadAnimation(viewHolder.itemView.getContext(), android.R.anim.slide_in_left);
+            Animation animation = AnimationUtils.loadAnimation(viewHolder.itemView.getContext(), R.anim.slide_back_swipeable_card);
             swipeableViewHolder.swipeableMainContainer.startAnimation(animation);
             callback.clearCached();
         }
-
     }
 }
